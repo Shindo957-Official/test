@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>New Tab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg:       #0e0e0f;
+      --surface:  #17171a;
+      --surface2: #1f1f23;
+      --border:   #2e2e35;
+      --text:     #e8e8ee;
+      --text2:    #7a7a8e;
+      --text3:    #4a4a58;
+      --accent:   #5b8ef0;
+      --radius:   10px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Geist', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 28px;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Clock ── */
+    .clock-block { text-align: center; animation: fadeUp 0.5s ease both; }
+    .clock {
+      font-size: 3.6rem;
+      font-weight: 300;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .date-display { font-size: 0.82rem; color: var(--text2); margin-top: 4px; letter-spacing: 0.04em; }
+
+    /* ── Search ── */
+    .search-wrap { animation: fadeUp 0.5s 0.05s ease both; }
+    .search-container {
+      display: flex; align-items: center;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      padding: 10px 16px;
+      width: 520px; max-width: 90vw;
+      gap: 10px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .search-container:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(91,142,240,0.15);
+    }
+    .search-container .search-icon { color: var(--text2); font-size: 0.9rem; flex-shrink: 0; }
+    .search-container input {
+      flex: 1; background: none; border: none; outline: none;
+      color: var(--text); font-size: 0.95rem; font-family: inherit;
+      padding: 0;
+    }
+    .search-container input::placeholder { color: var(--text3); }
+    .search-container select {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text2); border-radius: 6px;
+      padding: 4px 8px; cursor: pointer; font-size: 0.78rem;
+      font-family: inherit; transition: background 0.15s;
+      outline: none;
+    }
+    .search-container select:hover { background: #2a2a30; }
+    .search-container select option { background: var(--surface2); }
+
+    /* ── Shortcuts ── */
+    .shortcuts-wrap { animation: fadeUp 0.5s 0.1s ease both; }
+    .shortcuts-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      max-width: 420px;
+    }
+    .shortcut-item {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      cursor: pointer; text-decoration: none; color: inherit;
+    }
+    .icon-box {
+      width: 56px; height: 56px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, border-color 0.15s, transform 0.15s;
+    }
+    .icon-box img { width: 24px; height: 24px; filter: brightness(0) invert(1); opacity: 0.8; }
+    .icon-box i { font-size: 1.1rem; color: var(--text2); }
+    .shortcut-item:hover .icon-box {
+      background: var(--surface2); border-color: #4a4a58;
+      transform: translateY(-2px);
+    }
+    .shortcut-item:hover .shortcut-label { color: var(--text); }
+    .shortcut-label {
+      font-size: 0.7rem; color: var(--text2);
+      text-align: center; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; width: 100%;
+      transition: color 0.15s;
+    }
+    .add-shortcut .icon-box { border-style: dashed; }
+    .add-shortcut .icon-box i { color: var(--text3); }
+    .add-shortcut:hover .icon-box i { color: var(--text2); }
+
+    /* Context menu for right-click delete */
+    .ctx-menu {
+      position: fixed; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 4px; z-index: 9999;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5); min-width: 140px;
+      animation: fadeUp 0.1s ease;
+    }
+    .ctx-menu button {
+      width: 100%; padding: 7px 12px; background: none; border: none;
+      color: var(--text); text-align: left; cursor: pointer;
+      border-radius: 5px; font-size: 0.82rem; font-family: inherit;
+      display: flex; align-items: center; gap: 8px; transition: background 0.1s;
+    }
+    .ctx-menu button:hover { background: var(--surface); }
+    .ctx-menu button.danger:hover { background: rgba(248,113,113,0.1); color: #f87171; }
+
+    /* ── Quote ── */
+    .quote-block {
+      text-align: center; max-width: 420px;
+      animation: fadeUp 0.5s 0.15s ease both;
+    }
+    .quote { font-size: 0.78rem; color: var(--text3); font-style: italic; line-height: 1.5; }
+
+    /* ── Loading overlay ── */
+    .loading-overlay {
+      position: fixed; inset: 0;
+      background: rgba(14,14,15,0.8);
+      display: none; align-items: center; justify-content: center;
+      z-index: 9999; backdrop-filter: blur(4px);
+    }
+    .loading-overlay.show { display: flex; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin    { to { transform: rotate(360deg); } }
+    @keyframes fadeUp  { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform:none; } }
+  </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+</div>
+
+<div class="clock-block">
+  <div class="clock" id="clock">00:00</div>
+  <div class="date-display" id="dateDisplay"></div>
+</div>
+
+<div class="search-wrap">
+  <form class="search-container" id="searchForm">
+    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+    <input type="text" id="searchInput" placeholder="Search or enter URL..." autocomplete="off" autofocus>
+    <select id="engineSelect">
+      <option value="https://search.brave.com/search?q=" selected>Brave</option>
+      <option value="https://duckduckgo.com/?q=">DDG</option>
+      <option value="https://www.google.com/search?safe=active&q=">Google</option>
+      <option value="https://www.bing.com/search?q=">Bing</option>
+    </select>
+  </form>
+</div>
+
+<div class="shortcuts-wrap">
+  <div class="shortcuts-grid" id="shortcutsGrid">
+    <!-- Static defaults – rendered by JS so custom ones can be merged cleanly -->
+  </div>
+</div>
+
+<div class="quote-block">
+  <div class="quote" id="quoteText"></div>
+</div>
+
+<script>
+  // ── Clock ──────────────────────────────────────────────────────────────
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('dateDisplay').textContent =
+      now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // ── Quote ──────────────────────────────────────────────────────────────
+  const quotes = [
+    "Code is like humor — when you have to explain it, it's bad.",
+    "Programs must be written for people to read.",
+    "Dark mode saves eyes. Trust the process.",
+    "When in doubt, console.log it.",
+    "It's not a bug, it's an undocumented feature.",
+    "The only way to do great work is to love what you do.",
+    "Simplicity is the ultimate sophistication.",
+    "Make it work, make it right, make it fast.",
+    "The best code is no code at all.",
+    "First, solve the problem. Then, write the code.",
+    "Premature optimization is the root of all evil.",
+    "Walking on water and developing software from a spec are easy if both are frozen.",
+    "Any fool can write code that a computer can understand.",
+    "It always takes longer than you expect, even when you take into account Hofstadter's Law.",
+    "Talk is cheap. Show me the code.",
+  ];
+  document.getElementById('quoteText').textContent =
+    quotes[Math.floor(Math.random() * quotes.length)];
+
+  // ── Navigation helper ─────────────────────────────────────────────────
+  function navigate(url) {
+    if (!url) return;
+    document.getElementById('loadingOverlay').classList.add('show');
+    requestAnimationFrame(() => {
+      window.parent?.postMessage({ type: 'navigate', url }, '*');
+    });
+  }
+
+  // ── Search form ────────────────────────────────────────────────────────
+  document.getElementById('searchForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const query  = document.getElementById('searchInput').value.trim();
+    const engine = document.getElementById('engineSelect').value;
+    if (!query) return;
+    // If it looks like a URL, navigate directly
+    const isUrl = /^https?:\/\//i.test(query) || (/\./.test(query) && !/ /.test(query));
+    const target = isUrl
+      ? (query.startsWith('http') ? query : 'https://' + query)
+      : engine + encodeURIComponent(query);
+    navigate(target);
+  });
+
+  // ── Shortcuts ──────────────────────────────────────────────────────────
+  const DEFAULT_SHORTCUTS = [
+    { name: 'YouTube', url: 'https://youtube.com',      icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/youtube.svg' },
+    { name: 'GitHub',  url: 'https://github.com',       icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/github.svg' },
+    { name: 'Gmail',   url: 'https://mail.google.com',  icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/gmail.svg' },
+    { name: 'X',       url: 'https://twitter.com',      icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/x.svg' },
+    { name: 'Discord', url: 'https://discord.com',      icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/discord.svg' },
+    { name: 'Reddit',  url: 'https://reddit.com',       icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg' },
+    { name: 'Spotify', url: 'https://spotify.com',      icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/spotify.svg' },
+    { name: 'Twitch',  url: 'https://twitch.tv',        icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/twitch.svg' },
+    { name: 'ChatGPT', url: 'https://chat.openai.com',  icon: 'https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/openai.svg' },
+  ];
+
+  let customShortcuts = [];
+  try { customShortcuts = JSON.parse(localStorage.getItem('shortcuts') || '[]'); } catch {}
+
+  let ctxMenu = null;
+  function closeCtx() { ctxMenu?.remove(); ctxMenu = null; }
+  document.addEventListener('click', closeCtx);
+
+  function renderShortcuts() {
+    const grid = document.getElementById('shortcutsGrid');
+    grid.innerHTML = '';
+
+    const all = [...DEFAULT_SHORTCUTS, ...customShortcuts];
+    all.forEach((sc, idx) => {
+      const isCustom = idx >= DEFAULT_SHORTCUTS.length;
+      const div = document.createElement('div');
+      div.className = 'shortcut-item';
+      div.title = sc.name;
+
+      const box = document.createElement('div');
+      box.className = 'icon-box';
+      if (sc.icon?.startsWith('http')) {
+        const img = document.createElement('img');
+        img.src = sc.icon;
+        img.alt = sc.name;
+        img.onerror = () => { img.style.display='none'; box.innerHTML += `<i class="fa-solid fa-link"></i>`; };
+        box.appendChild(img);
+      } else {
+        box.innerHTML = `<i class="fa-solid fa-link"></i>`;
+      }
+
+      const label = document.createElement('span');
+      label.className = 'shortcut-label';
+      label.textContent = sc.name;
+
+      div.appendChild(box); div.appendChild(label);
+      div.addEventListener('click', () => navigate(sc.url));
+
+      if (isCustom) {
+        div.addEventListener('contextmenu', (e) => {
+          e.preventDefault(); closeCtx();
+          const menu = document.createElement('div');
+          menu.className = 'ctx-menu';
+          menu.innerHTML = `<button class="danger"><i class="fa-solid fa-trash" style="width:14px"></i>Remove</button>`;
+          menu.querySelector('button').onclick = () => {
+            const ci = idx - DEFAULT_SHORTCUTS.length;
+            customShortcuts.splice(ci, 1);
+            localStorage.setItem('shortcuts', JSON.stringify(customShortcuts));
+            renderShortcuts();
+          };
+          menu.style.left = e.clientX + 'px';
+          menu.style.top  = e.clientY + 'px';
+          document.body.appendChild(menu);
+          ctxMenu = menu;
+          e.stopPropagation();
+        });
+      }
+
+      grid.appendChild(div);
+    });
+
+    // Add new button
+    const addDiv = document.createElement('div');
+    addDiv.className = 'shortcut-item add-shortcut';
+    addDiv.title = 'Add shortcut';
+    addDiv.innerHTML = `
+      <div class="icon-box"><i class="fa-solid fa-plus"></i></div>
+      <span class="shortcut-label">Add</span>`;
+    addDiv.addEventListener('click', () => {
+      const name = prompt('Shortcut name:');
+      if (!name?.trim()) return;
+      let url = prompt('Shortcut URL:');
+      if (!url?.trim()) return;
+      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+      customShortcuts.push({ name: name.trim(), url });
+      localStorage.setItem('shortcuts', JSON.stringify(customShortcuts));
+      renderShortcuts();
+    });
+    grid.appendChild(addDiv);
+  }
+
+  renderShortcuts();
+</script>
+</body>
+</html>
